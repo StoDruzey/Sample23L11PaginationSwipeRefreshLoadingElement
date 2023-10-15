@@ -15,7 +15,9 @@ class FirstFragment : Fragment() {
     private val binding get() = requireNotNull(_binding)
 
     private val adapter by lazy {
-        CounterAdapter(requireContext())
+        CounterAdapter(requireContext()) {
+            loadData()
+        }
     }
     private var isLoading = false
     private var lastCounter = 0
@@ -54,14 +56,21 @@ class FirstFragment : Fragment() {
     private fun loadData() {
         if (isLoading) return
         isLoading = true
-        load(lastCounter, PAGE_SIZE) { items ->
-            lastCounter = items.last()
+
+        try {
+            load(lastCounter, PAGE_SIZE) { items ->
+                lastCounter = items.last()
+                val recentItems = adapter.currentList.dropLastWhile { it == Item.Loading }
+                val newItems = recentItems + items.map { Item.Counter(it) } + Item.Error
+                adapter.submitList(newItems)
+                isLoading = false
+            }
+        } catch (e: Throwable) {
             val recentItems = adapter.currentList.dropLastWhile { it == Item.Loading }
-            val newItems = recentItems + items.map { Item.Counter(it) } + Item.Loading
+            val newItems = recentItems + Item.Error
             adapter.submitList(newItems)
             isLoading = false
         }
-
     }
 
     companion object {
