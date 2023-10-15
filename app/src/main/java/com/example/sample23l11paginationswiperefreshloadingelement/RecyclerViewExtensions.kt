@@ -3,6 +3,7 @@ package com.example.sample23l11paginationswiperefreshloadingelement
 import android.graphics.Rect
 import android.view.View
 import androidx.annotation.DimenRes
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 fun RecyclerView.addVerticalSpace(@DimenRes spaceRes: Int = R.dimen.list_vertical_space) {
@@ -19,6 +20,22 @@ fun RecyclerView.addVerticalSpace(@DimenRes spaceRes: Int = R.dimen.list_vertica
                 outRect.bottom = space
             }
 //            outRect.bottom = space
+        }
+    })
+}
+
+fun RecyclerView.addPaginationListener(
+    linearLayoutManager: LinearLayoutManager,
+    itemsToLoad: Int,
+    onLoadMore: () -> Unit
+) {
+    addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            val lastVisiblePosition = linearLayoutManager.findLastVisibleItemPosition()
+            val itemCount = linearLayoutManager.itemCount
+            if (itemsToLoad + lastVisiblePosition >= itemCount) {
+                onLoadMore()
+            }
         }
     })
 }

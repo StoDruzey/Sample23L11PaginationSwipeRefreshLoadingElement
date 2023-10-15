@@ -1,6 +1,7 @@
 package com.example.sample23l11paginationswiperefreshloadingelement
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,8 @@ class FirstFragment : Fragment() {
     private val adapter by lazy {
         CounterAdapter(requireContext())
     }
+    private var isLoading = false
+    private var lastCounter = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,8 +38,10 @@ class FirstFragment : Fragment() {
             recyclerView.layoutManager = linearLayoutManager
             recyclerView.adapter = adapter
             recyclerView.addVerticalSpace()
-            val items = load(0, 50)
-            adapter.submitList(items.map { Item.Counter(it) })
+            recyclerView.addPaginationListener(linearLayoutManager, ITEMS_TO_LOAD) {
+                loadData()
+            }
+            loadData()
         }
     }
 
@@ -44,6 +49,25 @@ class FirstFragment : Fragment() {
         super.onDestroyView()
 
         _binding = null
+    }
+
+    private fun loadData() {
+        if (isLoading) return
+        isLoading = true
+        load(lastCounter, PAGE_SIZE) { items ->
+            lastCounter = items.last()
+            val recentItems = adapter.currentList.dropLastWhile { it == Item.Loading }
+            val newItems = recentItems + items.map { Item.Counter(it) } + Item.Loading
+            adapter.submitList(newItems)
+            isLoading = false
+        }
+
+    }
+
+    companion object {
+        private const val PAGE_SIZE = 50
+        private const val ITEMS_TO_LOAD = 15
+
     }
 }
 
